@@ -1,0 +1,19 @@
+{
+    "name": "generator-electron-react",
+    "version": "0.0.1",
+    "description": "",
+    "main": "index.js",
+    "dependencies": {
+        "yeoman-generator": "^0.22.5"
+    },
+    "devDependencies": {},
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "gabe rankin",
+    "license": "ISC",
+    "files": [
+        "app"
+    ],
+    "keywords": ["yeoman-generator"]
+}

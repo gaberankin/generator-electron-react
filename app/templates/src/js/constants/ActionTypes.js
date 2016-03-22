@@ -1,0 +1,7 @@
+
+//APP STATE ACTIONS
+export const BEGIN_LOADING = 'BEGIN_LOADING';
+export const END_LOADING = 'END_LOADING';
+
+//ALERT TEXT
+export const SET_ALERT_TEXT = 'SET_ALERT_TEXT';

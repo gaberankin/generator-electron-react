@@ -1,0 +1,40 @@
+import React from 'react';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import * as Actions from '../actions';
+import { LoadingDialog, AlertDialog } from '../components';
+
+class <%= jsClassName %> extends React.Component {
+	render () {
+		const {
+			<%= jsVarName %>: {
+				/*
+					list props you want here!
+					(see reducers/<%= jsVarName %>.js for app initialState variable)
+				*/
+				isLoading,
+				alertText
+			},
+			dispatch
+		} = this.props;
+		const actions = bindActionCreators(Actions, dispatch);
+
+		return (
+			<div className="<%= cssName %>-app">
+				<div className="<%= cssName %>-body">
+				</div>
+				<LoadingDialog isLoading={isLoading} />
+				<AlertDialog text={alertText} actions={actions} />
+			</div>
+		);
+	}
+}
+<%= jsClassName %>.propTypes = {
+	<%= jsVarName %>: React.PropTypes.object.isRequired
+};
+
+const select = function(state) {
+	return { <%= jsVarName %>: state.<%= jsVarName %> };
+};
+
+export default connect(select)(<%= jsClassName %>);
