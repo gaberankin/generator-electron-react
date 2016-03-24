@@ -1,12 +1,5 @@
 var generators = require('yeoman-generator');
 
-var TemplateReplacements = {
-	appName: null,
-	cssName: null,
-	jsClassName: null,
-	jsVarName: null
-
-};
 
 module.exports = generators.Base.extend({
 	prompting: function () {
@@ -17,19 +10,25 @@ module.exports = generators.Base.extend({
 			message : 'Application name (your controller\'s name and css classes will be derived from this)',
 			default : this.appname // Default to current folder name
 		}, function (answers) {
-			TemplateReplacements.appName = answers.name;
-			TemplateReplacements.cssName = toCssSafe(answers.name);
-			TemplateReplacements.jsClassName = toJsSafe(answers.name)+'App';
-			TemplateReplacements.jsVarName = toJsSafe(answers.name).toLowerCase();
-			this.log(TemplateReplacements);
+			this.config.set('templateVals', {
+				appName: answers.name,
+				cssName: toCssSafe(answers.name),
+				jsClassName: toJsSafe(answers.name)+'App',
+				jsVarName: toJsSafe(answers.name).toLowerCase()
+			});
+			this.config.save();
 			done();
 		}.bind(this));
 	},
 	packageJson: function(){
+		var templateVals = this.config.get('templateVals');
 		var defaultJson = {
-			name: TemplateReplacements.cssName,	//the css name is going to be the safest.  users may enter invalid names in the prompt, and npm doesnt like spaces :(
+			name: templateVals.cssName,	//the css name is going to be the safest.  users may enter invalid names in the prompt, and npm doesnt like spaces :(
 			scripts: {
 				start : "node_modules/.bin/electron dist/js/main.js"
+			},
+			jshintConfig : {
+				esnext: true,
 			}
 		};
 		if(this.fs.exists(this.destinationPath('package.json'))) {
@@ -39,22 +38,22 @@ module.exports = generators.Base.extend({
 		}
 	},
 	templates: function(){
-
+		var templateVals = this.config.get('templateVals');
 		this.fs.copyTpl(
 			this.templatePath('gulpfile.js'),
 			this.destinationPath('gulpfile.js'),
-			TemplateReplacements
+			templateVals
 		);
 		this.fs.copyTpl(
 			this.templatePath('src/index.jade'),
 			this.destinationPath('src/index.jade'),
-			TemplateReplacements
+			templateVals
 		);
 		/* CSS */
 		this.fs.copyTpl(
 			this.templatePath('src/styles/main.scss'),
 			this.destinationPath('src/styles/main.scss'),
-			TemplateReplacements
+			templateVals
 		);
 		this.directory('src/styles/vendor', 'src/styles/vendor');
 
@@ -71,7 +70,7 @@ module.exports = generators.Base.extend({
 			'src/js/containers/App.jsx',
 			[
 				'src/js/containers/AppContainer.jsx.template',
-				'src/js/containers/'+TemplateReplacements.jsClassName+'.jsx'
+				'src/js/containers/'+templateVals.jsClassName+'.jsx'
 			],
 			'src/js/helpers/debounce.js',
 			'src/js/helpers/escapeHtml.js',
@@ -79,27 +78,28 @@ module.exports = generators.Base.extend({
 			'src/js/reducers/index.js',
 			[
 				'src/js/reducers/appreducer.js.template',
-				'src/js/reducers/'+TemplateReplacements.jsVarName+'.js'
+				'src/js/reducers/'+templateVals.jsVarName+'.js'
 			],
 		];
 		for(var i = 0, l = jsFiles.length; i < l; i++) {
 			if(typeof jsFiles[i] === 'string') {
-				this.fs.copyTpl(this.templatePath(jsFiles[i]), this.destinationPath(jsFiles[i]), TemplateReplacements);
+				this.fs.copyTpl(this.templatePath(jsFiles[i]), this.destinationPath(jsFiles[i]), templateVals);
 			} else if(jsFiles[i] instanceof Array) {
-				this.fs.copyTpl(this.templatePath(jsFiles[i][0]), this.destinationPath(jsFiles[i][1]), TemplateReplacements);
+				this.fs.copyTpl(this.templatePath(jsFiles[i][0]), this.destinationPath(jsFiles[i][1]), templateVals);
 			}
 		}
-
-
 	},
-	installNpmDependencies: function () {
-		var devDeps = ["babel-core", "babel-preset-es2015", "babel-preset-react",
-			"babel-preset-stage-2", "electron-prebuilt", "gulp",
-			"gulp-babel", "gulp-changed", "gulp-jade", "gulp-sass"];
-		var deps = ["react", "react-bootstrap", "react-dom", "react-redux",
-			"redux", "redux-thunk"];
-		this.npmInstall(devDeps, { 'saveDev': true });
-		this.npmInstall(deps, { 'save': true });
+	installDevDeps: function(){
+		var done = this.async();
+		this.invoke('electron-react:dev-dependencies', {}, function(){
+			done();
+		});
+	},
+	installDeps: function(){
+		var done = this.async();
+		this.invoke('electron-react:dependencies', {}, function(){
+			done();
+		});
 	}
 });
 
